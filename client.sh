@@ -9,14 +9,30 @@ if [ "$EUID" -ne 0 ]
 fi
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ $# -eq 0 ]
-  then echo "Usage: $command_name { CountryCode | City }"
-       echo "For example, try 'ipvanish EE'."
+then
+  if [ -e $config_dir/ca.ipvanish.com.crt ]
+  then
+     echo "Usage: $command_name { CountryCode | City }"
+     echo "For example, try 'ipvanish EE'."
+  else
+     echo "You need to initialize the client."
+     echo "Run 'ipvanish init' first."
+  fi
   exit
 fi
 
 if [ $# -gt 1 ]
   then echo "$command_name: too many arguments"
   exit
+fi
+
+if [[ $1 == "init" || $1 == "update" ]]
+then
+  wget -q "https://configs.ipvanish.com/configs/configs.zip"
+  unzip -qo configs.zip -d $config_dir
+  rm configs.zip
+  find $config_dir -type f -exec sed -i '/keysize 256/d' {} +
+exit
 fi
 
 countries=$(ls "$config_dir" | awk -F'-' '{print $2}' | sort -u)
@@ -40,6 +56,6 @@ index=$((RANDOM%${#files_list[@]}))
 ovpn_file=${files_list[index]}
 
 echo "Using $ovpn_file"
-openvpn --config "$ovpn_file"
+openvpn --config $ovpn_file --ca $config_dir/ca.ipvanish.com.crt
 
 exit
