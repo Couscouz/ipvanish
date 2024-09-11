@@ -9,7 +9,7 @@ if [ "$EUID" -ne 0 ]
   exit
 fi
 
-if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ $# -eq 0 ]
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]
 then
   if [ -e $config_dir/ca.ipvanish.com.crt ]
   then
