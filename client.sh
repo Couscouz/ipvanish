@@ -2,6 +2,7 @@
 
 command_name="ipvanish"
 config_dir="/opt/ipvanish/config"
+auth_file="/opt/ipvanish/ids.txt"
 
 if [ "$EUID" -ne 0 ]
   then echo "Please run as root"
@@ -28,6 +29,7 @@ fi
 
 if [[ $1 == "init" || $1 == "update" ]]
 then
+  apt install unzip
   wget -q "https://configs.ipvanish.com/configs/configs.zip"
   unzip -qo configs.zip -d $config_dir
   rm configs.zip
@@ -56,6 +58,6 @@ index=$((RANDOM%${#files_list[@]}))
 ovpn_file=${files_list[index]}
 
 echo "Using $ovpn_file"
-openvpn --config $ovpn_file --ca $config_dir/ca.ipvanish.com.crt
+openvpn --config $ovpn_file --ca $config_dir/ca.ipvanish.com.crt --auth-user-pass $auth_file
 
 exit
