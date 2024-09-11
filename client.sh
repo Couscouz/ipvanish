@@ -37,27 +37,31 @@ then
 exit
 fi
 
-countries=$(ls "$config_dir" | awk -F'-' '{print $2}' | sort -u)
-cities=$(ls "$config_dir" | awk -F'-' '{ for(i=3; i<NF-1; i++) printf "%s ", $i; print "" }' | sort -u)
+# If no arguments are given, select a random location
+if [ $# -eq 0 ]
+then
+  echo "No location provided, selecting a random VPN location..."
+  files_list=($(find "$config_dir" -type f -name "*.ovpn" -exec printf "%s\n" {} +))
+  index=$((RANDOM % ${#files_list[@]}))
+  ovpn_file=${files_list[$index]}
+else
+  countries=$(ls "$config_dir" | awk -F'-' '{print $2}' | sort -u)
+  cities=$(ls "$config_dir" | awk -F'-' '{ for(i=3; i<NF-1; i++) printf "%s ", $i; print "" }' | sort -u)
 
-if [[ $countries != *$1* && $cities != *$1* ]]
-  then echo "argument is neither a valid country or a city"
-       echo "Try 'ipvanish --help' for more information."
-  exit
+  if [[ $countries != *$1* && $cities != *$1* ]]
+  then
+    echo "Argument is neither a valid country nor a city."
+    echo "Try '$command_name --help' for more information."
+    exit
+  fi
+
+  # Populate files_list based on the provided argument
+  files_list=($(find "$config_dir" -type f -name "*$1*" -exec printf "%s\n" {} +))
+  index=$((RANDOM % ${#files_list[@]}))
+  ovpn_file=${files_list[$index]}
 fi
 
-files_list=()
-
-# Remplissage du tableau avec les fichiers correspondants
-while IFS= read -r -d '' file; do
-  files_list+=("$file")
-done < <(find "$config_dir" -type f -name "*$1*" -print0)
-
-files_list=($(find "$config_dir" -type f -name "*$1*" -exec printf "%s\n" {} +))
-index=$((RANDOM%${#files_list[@]}))
-ovpn_file=${files_list[index]}
-
 echo "Using $ovpn_file"
-openvpn --config $ovpn_file --ca $config_dir/ca.ipvanish.com.crt --auth-user-pass $auth_file
+openvpn --config "$ovpn_file" --ca "$config_dir/ca.ipvanish.com.crt" --auth-user-pass "$auth_file"
 
 exit
