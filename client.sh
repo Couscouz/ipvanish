@@ -29,7 +29,7 @@ fi
 
 if [[ $1 == "init" || $1 == "update" ]]
 then
-  apt install unzip
+  apt install unzip openvpn curl -y
   wget -q "https://configs.ipvanish.com/configs/configs.zip"
   unzip -qo configs.zip -d $config_dir
   rm configs.zip
